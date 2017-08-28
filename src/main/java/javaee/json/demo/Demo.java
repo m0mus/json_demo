@@ -1,7 +1,13 @@
 package javaee.json.demo;
 
+import javaee.json.demo.model.animal.Carrier;
+import javaee.json.demo.model.animal.Cat;
+import javaee.json.demo.model.animal.Dog;
+import javaee.json.demo.model.animal.Pet;
 import javaee.json.demo.model.person.Person;
 import javaee.json.demo.model.person.PhoneNumber;
+import javaee.json.demo.serializer.PetDeserializer;
+import javaee.json.demo.serializer.PetSerializer;
 
 import javax.json.*;
 import javax.json.bind.Jsonb;
@@ -24,7 +30,7 @@ public class Demo {
         System.out.println((new ArrayList<Person>()).getClass());
         System.out.println((new ArrayList<Person>()).getClass().getGenericSuperclass());
 
-        //new Demo().start();
+        new Demo().start();
     }
 
     private void start() {
@@ -58,6 +64,9 @@ public class Demo {
                     break;
                 case "8":
                     jsonbDeserializationGenericListDemo();
+                case "9":
+                    jsonbSerializerDemo();
+                    break;
             }
         }
     }
@@ -76,6 +85,7 @@ public class Demo {
         System.out.println("6. JSON-B serialization");
         System.out.println("7. JSON-B deserialization");
         System.out.println("8. JSON-B deserialization generic list");
+        System.out.println("9. JSON-B serializer/deserializer list");
 
         System.out.println();
         System.out.println("-----------------------------------------------------------------------------------");
@@ -245,5 +255,29 @@ public class Demo {
 
         List<Person> jasons = jsonb.fromJson(Demo.class.getResourceAsStream("/jasons.json"), type);
         System.out.println(jasons.get(1).getName());
+    }
+
+    /**
+     * Demonstrates custom serializer and deserializer used to serialize/deserialize polymorphic classes.
+     */
+    private void jsonbSerializerDemo() {
+        // Create a list of carrier objects
+        List<Carrier<Pet>> carriers = new ArrayList<>();
+        carriers.add(new Carrier<>(Carrier.TYPE.BAG, new Cat("Harris", 10, true, true)));
+        carriers.add(new Carrier<>(Carrier.TYPE.CRATE, new Dog("Falco", 4, false, false)));
+        Type carrierListType = new ArrayList<Carrier<Pet>>() {}.getClass().getGenericSuperclass();
+
+        JsonbConfig config = new JsonbConfig()
+                .withFormatting(true)
+                .withSerializers(new PetSerializer())
+                .withDeserializers(new PetDeserializer());
+
+        Jsonb jsonb = JsonbBuilder.create(config);
+
+        String json = jsonb.toJson(carriers, carrierListType);
+        System.out.println(json);
+
+        List<Carrier<Pet>> list = jsonb.fromJson(json, carrierListType);
+        System.out.println(list.get(0).getCarriedPet().getClass().getName());
     }
 }
