@@ -1,6 +1,7 @@
 package javaee.json.demo.model.animal;
 
 import javax.json.bind.annotation.JsonbCreator;
+import javax.json.bind.annotation.JsonbProperty;
 
 /**
  * A container to carry an animal.
@@ -15,7 +16,8 @@ public class Carrier<P extends Pet> {
     private P carriedPet;
 
     @JsonbCreator
-    public Carrier(TYPE carrierType, P carriedPet) {
+    public Carrier(@JsonbProperty("carrierType") TYPE carrierType,
+                   @JsonbProperty("carriedPet") P carriedPet) {
         this.carrierType = carrierType;
         this.carriedPet = carriedPet;
     }
